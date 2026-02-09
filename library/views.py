@@ -6,6 +6,8 @@ from .models import User, Author, Genre, Book, BorrowRequest, BookReview
 from .serializers import RegisterSerializer, AuthorSerializer, GenreSerializer, BookSerializer, BookCreateSerializer, BorrowRequestSerializer, BookReviewSerializer
 from .permissions import IsLibrarian, IsStudent
 from .throttles import BorrowRequestThrottle
+from django.core.mail import send_mail
+
 
 # Create your views here.
 
@@ -105,6 +107,13 @@ class ApproveBorrowRequestView(APIView):
         req.status = BorrowRequest.Status.APPROVED
         req.approved_at = timezone.now()
         req.save()
+
+        send_mail(
+            subject="Your Borrow Request Has Been Approved",
+            message=f"Your request for the book '{req.book.title}' has been approved.",
+            from_email=None,
+            recipient_list=[req.user.email],
+        )
         return Response({"message": "Borrow request approved"})
 
 class RejectBorrowRequestView(APIView):
@@ -118,6 +127,13 @@ class RejectBorrowRequestView(APIView):
 
         req.status = BorrowRequest.Status.REJECTED
         req.save()
+        
+        send_mail(
+            subject="Your Borrow Request Has Been Rejected",
+            message=f"Your request for the book '{req.book.title}' has been rejected.",
+            from_email=None,
+            recipient_list=[req.user.email],
+        )
         return Response({"message": "Borrow request rejected"})
 
 
