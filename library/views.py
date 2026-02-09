@@ -16,6 +16,11 @@ class BookListCreateView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     
+    filterset_fields = ["author", "genres"]
+    search_fields = ["title"]
+    ordering_fields = ["title", "available_copies", "total_copies"]
+
+    
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return BookCreateSerializer
