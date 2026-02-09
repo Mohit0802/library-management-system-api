@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from .models import User, Author, Genre, Book, BorrowRequest, BookReview
 from .serializers import RegisterSerializer, AuthorSerializer, GenreSerializer, BookSerializer, BookCreateSerializer, BorrowRequestSerializer, BookReviewSerializer
 from .permissions import IsLibrarian, IsStudent
+from .throttles import BorrowRequestThrottle
 
 # Create your views here.
 
@@ -77,6 +78,8 @@ class GenreListCreateView(generics.ListCreateAPIView):
 class BorrowRequestCreateView(generics.CreateAPIView):
     serializer_class = BorrowRequestSerializer
     permission_classes = [permissions.IsAuthenticated, IsStudent]
+    throttle_classes = [BorrowRequestThrottle]
+
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
