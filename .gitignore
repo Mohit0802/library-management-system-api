@@ -17,6 +17,8 @@ static/
 .env.*
 *.env
 
+!.env.example
+
 *.log
 *.pot
 *.tmp
