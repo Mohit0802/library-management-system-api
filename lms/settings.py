@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import dotenv, os
+from datetime import timedelta
 
 dotenv.load_dotenv()
 
@@ -45,7 +46,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -61,6 +61,13 @@ MIDDLEWARE = [
 AUTH_USER_MODEL = "library.User"
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+    
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 
@@ -70,6 +77,21 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
     ]
 }
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),   # 👈 1 day access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 👈 optional (7 days)
+
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+}
+
 
 
 ROOT_URLCONF = 'lms.urls'
@@ -109,6 +131,20 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS") == "True"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter: Bearer <access_token>"
+        }
+    },
+    "USE_SESSION_AUTH": False,  # disable Django Login button
+}
+
 
 
 

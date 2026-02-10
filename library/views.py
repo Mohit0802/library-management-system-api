@@ -1,5 +1,4 @@
-from time import timezone
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User, Author, Genre, Book, BorrowRequest, BookReview
@@ -7,6 +6,7 @@ from .serializers import RegisterSerializer, AuthorSerializer, GenreSerializer, 
 from .permissions import IsLibrarian, IsStudent
 from .throttles import BorrowRequestThrottle
 from django.core.mail import send_mail
+from django.utils import timezone
 
 
 # Create your views here.
@@ -84,6 +84,26 @@ class BorrowRequestCreateView(generics.CreateAPIView):
 
 
     def perform_create(self, serializer):
+        user = self.request.user
+        book_id = self.request.data.get("book")
+        
+        existing_request = BorrowRequest.objects.filter(
+            user=user, 
+            book_id=book_id, 
+            status__in=[BorrowRequest.Status.PENDING, BorrowRequest.Status.APPROVED],
+        ).first()
+        
+        if existing_request:
+            if existing_request.status == BorrowRequest.Status.PENDING:
+                message = "You already have a pending borrow request for this book."
+            else:
+                message = (
+                    "You already have an approved borrow request for this book. "
+                    "Please return the book before requesting it again."
+                )
+
+            raise serializers.ValidationError({"detail": message})
+
         serializer.save(user=self.request.user)
 
 
@@ -155,6 +175,8 @@ class ReturnBorrowRequestView(APIView):
 class BookReviewCreateView(generics.CreateAPIView):
     serializer_class = BookReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    queryset = BookReview.objects.all()
 
     def perform_create(self, serializer):
             serializer.save(
@@ -167,4 +189,6 @@ class BookReviewListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return BookReview.objects.none()
         return BookReview.objects.filter(book_id=self.kwargs["pk"])

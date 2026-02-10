@@ -33,6 +33,9 @@ class Book(models.Model):
     available_copies = models.PositiveIntegerField(default=1)
     total_copies = models.PositiveIntegerField(default=1)
     
+    class Meta:
+        ordering = ['-id']
+    
     def __str__(self):
         return self.title
 
